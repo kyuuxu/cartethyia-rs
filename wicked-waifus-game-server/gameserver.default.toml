@@ -27,14 +27,14 @@ unlock_all_roles = true
 unlock_all_roles_max_level = false
 unlock_all_roles_all_sequences = false
 unlock_all_mc_elements = true
-unlock_all_weapons = false
+unlock_all_weapons = true
 unlock_all_weapons_max_level = false
 unlock_all_weapons_all_reson = false
 unlock_all_adventures = false
 unlock_all_functions = true
 unlock_all_guides = false
 unlock_all_tutorials = false
-unlock_all_teleporter = false
+unlock_all_teleporter = true
 unlock_all_role_skins = false
 # TODO: Set this to the same value as unlock_all_role_skins, without it, it fails(maybe jinshi weapon skin problem??)
 unlock_all_weapon_skins = false

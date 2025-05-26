@@ -5,7 +5,21 @@ use crate::logic::ecs::component::ComponentContainer;
 use crate::logic::player::{ItemUsage, Player};
 use crate::logic::role::{Role, RoleFormation};
 use crate::modify_component;
-use wicked_waifus_protocol::{ArrayIntInt, ClientCurrentRoleReportRequest, ClientCurrentRoleReportResponse, ERemoveEntityType, EntityAddNotify, EntityEquipSkinChangeNotify, EntityFlySkinChangeData, EntityPb, EntityRemoveInfo, EntityRemoveNotify, EquipFlySkinData, ErrorCode, FlySkinConfigData, FlySkinWearAllRoleRequest, FlySkinWearAllRoleResponse, FlySkinWearRequest, FlySkinWearResponse, FormationAttrRequest, FormationAttrResponse, PbUpLevelRoleRequest, PbUpLevelRoleResponse, PlayerMotionRequest, PlayerMotionResponse, RoleBreakThroughViewRequest, RoleBreakThroughViewResponse, RoleFavorListRequest, RoleFavorListResponse, RoleFlyEquipChangeNotify, RoleLevelUpViewRequest, RoleLevelUpViewResponse, RoleShowListUpdateRequest, RoleShowListUpdateResponse, RoleSkinChangeRequest, RoleSkinChangeResponse, SoarWingOrParaglidingSkinChangeNotify, UnlockRoleSkinListRequest, UnlockRoleSkinListResponse, UpdateFormationRequest, UpdateFormationResponse, WeaponSkinComponentPb};
+use wicked_waifus_protocol::{
+    ArrayIntInt, ClientCurrentRoleReportRequest, ClientCurrentRoleReportResponse,
+    ERemoveEntityType, EntityAddNotify, EntityEquipSkinChangeNotify, EntityFlySkinChangeData,
+    EntityPb, EntityRemoveInfo, EntityRemoveNotify, EquipFlySkinData, EquipTakeOnNotify,
+    EquipTakeOnRequest, EquipTakeOnResponse, ErrorCode, FlySkinConfigData,
+    FlySkinWearAllRoleRequest, FlySkinWearAllRoleResponse, FlySkinWearRequest, FlySkinWearResponse,
+    FormationAttrRequest, FormationAttrResponse, PbUpLevelRoleRequest, PbUpLevelRoleResponse,
+    PlayerMotionRequest, PlayerMotionResponse, RoleBreakThroughViewRequest,
+    RoleBreakThroughViewResponse, RoleFavorListRequest, RoleFavorListResponse,
+    RoleFlyEquipChangeNotify, RoleLevelUpViewRequest, RoleLevelUpViewResponse, RoleLoadEquipData,
+    RoleShowListUpdateRequest, RoleShowListUpdateResponse, RoleSkinChangeRequest,
+    RoleSkinChangeResponse, SoarWingOrParaglidingSkinChangeNotify, UnlockRoleSkinListRequest,
+    UnlockRoleSkinListResponse, UpdateFormationRequest, UpdateFormationResponse,
+    WeaponSkinComponentPb,
+};
 
 pub fn on_role_show_list_update_request(
     player: &mut Player,
@@ -92,10 +106,10 @@ pub fn on_update_formation_request(
                 ));
             }
 
-            let added_roles: Vec<Role> = formation
+            let added_roles: Vec<&Role> = formation
                 .role_ids
                 .iter()
-                .map(|&role_id| Role::new(role_id))
+                .filter_map(|role_id| player.role_list.get(role_id))
                 .collect();
 
             if !added_roles.is_empty() {
@@ -222,7 +236,7 @@ pub fn on_role_skin_change_request(
             player.notify(EntityEquipSkinChangeNotify {
                 entity_id,
                 weapon_skin_component_pb: Some(WeaponSkinComponentPb {
-                    weapon_skin_id:skin_data.suit_weapon_skin_id,
+                    weapon_skin_id: skin_data.suit_weapon_skin_id,
                 }),
             });
         }

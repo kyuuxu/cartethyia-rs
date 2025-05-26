@@ -1,13 +1,11 @@
 use wicked_waifus_protocol::combat_message::{
-    combat_notify_data, combat_receive_data, combat_request_data, combat_response_data,
-    combat_send_data, CombatNotifyData, CombatReceiveData, CombatRequestData, CombatResponseData,
-    CombatSendPackRequest, CombatSendPackResponse,
+    combat_notify_data, combat_receive_data, combat_request_data, combat_response_data, combat_send_data, CombatNotifyData, CombatReceiveData, CombatReceivePackNotify, CombatRequestData, CombatResponseData, CombatSendPackRequest, CombatSendPackResponse
 };
 use wicked_waifus_protocol::{
     AttributeChangedNotify, CombatCommon, DErrorResult, DamageExecuteRequest,
-    DamageExecuteResponse, EAttributeType, ERemoveEntityType, ErrorCode,
-    FsmConditionPassRequest, FsmConditionPassResponse, GameplayAttributeData,
-    PlayerBattleStateChangeNotify, SwitchRoleRequest, SwitchRoleResponse,
+    DamageExecuteResponse, EAttributeType, ERemoveEntityType, ErrorCode, FsmConditionPassRequest,
+    FsmConditionPassResponse, GameplayAttributeData, PlayerBattleStateChangeNotify,
+    SwitchRoleRequest, SwitchRoleResponse,
 };
 
 use wicked_waifus_data::damage_data;
@@ -46,6 +44,41 @@ fn create_combat_notify(
             },
         )),
     }
+}
+
+#[inline(always)]
+fn create_combat_receive_notify(
+    entity_id: i64,
+    message: combat_notify_data::Message,
+) -> CombatReceivePackNotify {
+    CombatReceivePackNotify {
+        data: vec![CombatReceiveData {
+            message: Some(combat_receive_data::Message::CombatNotifyData(
+                CombatNotifyData {
+                    combat_common: Some(CombatCommon {
+                        entity_id,
+                        ..Default::default()
+                    }),
+                    message: Some(message),
+                },
+            )),
+        }],
+    }
+}
+
+#[inline(always)]
+pub fn attribute_changed_combat_notify(
+    player: &Player,
+    entity_id: i64,
+    attributes: Vec<GameplayAttributeData>,
+) {
+    player.notify(create_combat_receive_notify(
+        entity_id,
+        combat_notify_data::Message::AttributeChangedNotify(AttributeChangedNotify {
+            id: entity_id,
+            attributes: attributes,
+        }),
+    ));
 }
 
 pub fn on_combat_message_combat_send_pack_request(

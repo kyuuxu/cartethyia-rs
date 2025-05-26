@@ -9,13 +9,16 @@ use wicked_waifus_data::{
     blueprint_config_data, template_config_data, EntityLogic, EntityType, LevelEntityConfigData,
 };
 
-use crate::logic::components::{Autonomous, Fsm, Interact, MonsterAi, ParaglidingSkin, SoarWingSkin, StateTag, Tag, WeaponSkin};
+use crate::logic::components::{
+    Autonomous, Fsm, Interact, MonsterAi, ParaglidingSkin, SoarWingSkin, StateTag, Tag, WeaponSkin,
+};
 use crate::logic::ecs::entity::EntityBuilder;
 use crate::logic::ecs::world::World;
 use crate::logic::math::Transform;
 use crate::logic::player::Player;
-use crate::logic::utils::{entity_serializer, tag_utils};
 use crate::logic::utils::growth_utils::get_monster_props_by_level;
+use crate::logic::utils::load_role_info::from_key_value;
+use crate::logic::utils::{entity_serializer, tag_utils};
 use crate::logic::{
     components::{
         Attribute, EntityConfig, Equip, FightBuff, Movement, OwnerPlayer, PlayerOwnedEntityMarker,
@@ -28,28 +31,31 @@ use crate::query_with;
 #[macro_export]
 macro_rules! create_player_entity_pb {
     ($role_list:expr, $cur_map_id:expr, $player:expr, $player_id:expr, $position:expr, $explore_tools:expr, $world:expr) => {{
-        let current_formation = $player.formation_list.get(&$player.cur_formation_id).unwrap();
+        let current_formation = $player
+            .formation_list
+            .get(&$player.cur_formation_id)
+            .unwrap();
         let cur_role_id = current_formation.cur_role;
 
         let mut pbs = Vec::new();
 
         for role in $role_list {
-            let entity = $world.create_entity(
-                role.role_id,
-                EEntityType::Player.into(),
-                $cur_map_id,
-            );
-            // Once per character buffs are implemented, add a mut on role_buffs
+            let entity =
+                $world.create_entity(role.role_id, EEntityType::Player.into(), $cur_map_id);
+
             let fight_buff_infos = $world.generate_role_permanent_buffs(entity.entity_id as i64);
             let buf_manager = FightBuff {
                 fight_buff_infos,
                 list_buff_effect_cd: vec![],
             };
 
-            let entity = $world.create_builder(entity)
-                .with(ComponentContainer::PlayerOwnedEntityMarker(PlayerOwnedEntityMarker {
-                    entity_type: EEntityType::Player,
-                }))
+            let entity = $world
+                .create_builder(entity)
+                .with(ComponentContainer::PlayerOwnedEntityMarker(
+                    PlayerOwnedEntityMarker {
+                        entity_type: EEntityType::Player,
+                    },
+                ))
                 .with(ComponentContainer::EntityConfig(EntityConfig {
                     camp: 0,
                     config_id: role.role_id,
@@ -59,23 +65,22 @@ macro_rules! create_player_entity_pb {
                 }))
                 .with(ComponentContainer::OwnerPlayer(OwnerPlayer($player_id)))
                 .with(ComponentContainer::Position(Position($position)))
-                .with(ComponentContainer::Visibility(Visibility{
+                .with(ComponentContainer::Visibility(Visibility {
                     is_visible: role.role_id == cur_role_id,
                     is_actor_visible: true,
                 }))
-                // TODO: Check if role has hardness or rage_mode
-                // TODO: Support AddProp from Equipment(Echo, weapon, buffs??), weapon base state goes to base_prop too.
-                .with(ComponentContainer::Attribute(
-                     Attribute::from_data(
-                         &role.get_base_properties(),
-                         None,
-                         None,
-                     )
-                ))
+                .with(ComponentContainer::Attribute(Attribute::from_data(
+                    &$crate::logic::utils::load_role_info::from_key_value(&role.base_prop),
+                    Some(&$crate::logic::utils::load_role_info::from_key_value(
+                        &role.add_prop,
+                    )),
+                    None,
+                    None,
+                )))
                 .with(ComponentContainer::Movement(Movement::default()))
                 .with(ComponentContainer::Equip(Equip {
                     weapon_id: role.equip_weapon,
-                    weapon_breach_level: 90, // TODO: store this too
+                    weapon_breach_level: 0,
                 }))
                 .with(ComponentContainer::VisionSkill(VisionSkill {
                     skill_id: $explore_tools.active_explore_skill,
@@ -168,7 +173,8 @@ pub fn add_player_entities(player: &Player) {
                 // TODO: Check if role has hardness or rage_mode
                 // TODO: Support AddProp from Equipment(Echo, weapon, buffs??), weapon base state goes to base_prop too.
                 .with(ComponentContainer::Attribute(Attribute::from_data(
-                    &role.get_base_properties(),
+                    &from_key_value(&role.base_prop),
+                    Some(&from_key_value(&role.add_prop)),
                     None,
                     None,
                 )))
@@ -438,7 +444,13 @@ pub fn add_entities(player: &Player, entities: &[&LevelEntityConfigData], extern
 
             build_autonomous_component(&mut builder, player.basic_info.id, entity_logic);
             build_interact_component(&mut builder, &components);
-            build_tags_components(&mut builder, &components, player, blueprint_config.unwrap().entity_type, config_id as i64);
+            build_tags_components(
+                &mut builder,
+                &components,
+                player,
+                blueprint_config.unwrap().entity_type,
+                config_id as i64,
+            );
             build_attribute_component(&mut builder, &components, player.location.instance_id);
             build_ai_components(&mut builder, &components);
             added_entities.push(builder.build());
@@ -504,7 +516,10 @@ fn build_tags_components(
     if let Some(entity_state_component) = &components.entity_state_component {
         let state = match entity_type {
             EntityType::Teleporter | EntityType::TemporaryTeleporter => {
-                let result = player.teleports.teleports_data.iter()
+                let result = player
+                    .teleports
+                    .teleports_data
+                    .iter()
                     .find(|teleporter| teleporter.entity_config_id == config_id);
                 match result.is_some() {
                     true => tag_utils::get_tag_id_by_name("关卡.Common.状态.激活"),
@@ -560,6 +575,7 @@ fn build_attribute_component(
             }
             builder.with(ComponentContainer::Attribute(Attribute::from_data(
                 &get_monster_props_by_level(property_id, level),
+                None,
                 attribute_component.hardness_mode_id,
                 attribute_component.rage_mode_id,
             )));

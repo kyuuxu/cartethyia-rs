@@ -43,10 +43,11 @@ impl Attribute {
 
     #[inline(always)]
     pub fn from_data(base_property: &BasePropertyData,
+                     add_property: Option<&BasePropertyData>,
                      hardness_mode_id: Option<i32>,
                      rage_mode_id: Option<i32>) -> Self {
         Self {
-            attr_map: attribute_from_data(base_property),
+            attr_map: attribute_from_data(base_property, add_property),
             hardness_mode_id: hardness_mode_id.unwrap_or_default(),
             rage_mode_id: rage_mode_id.unwrap_or_default(),
         }

@@ -1,6 +1,6 @@
+use std::collections::HashMap;
 use wicked_waifus_data::BasePropertyData;
 use wicked_waifus_protocol::EAttributeType;
-use std::collections::HashMap;
 
 #[macro_export]
 macro_rules! impl_base_prop {
@@ -10,10 +10,20 @@ macro_rules! impl_base_prop {
                     ::paste::paste!((EAttributeType::[<$name:camel>] as i32, base_property.$name as i32)),
                 )*])
         }
-        pub fn attribute_from_data(base_property: &BasePropertyData) -> HashMap<EAttributeType, (i32, i32)> {
+        pub fn attribute_from_data(base_property: &BasePropertyData, add_property: Option<&BasePropertyData>) -> HashMap<EAttributeType, (i32, i32)> {
             HashMap::from([$(
-                    ::paste::paste!((EAttributeType::[<$name:camel>], (base_property.$name, 0))),
+                    ::paste::paste!((EAttributeType::[<$name:camel>], (base_property.$name, add_property.map_or(0, |v| v.$name)))),
                 )*])
+        }
+        pub fn from_key_value(key_value: &HashMap<i32, i32>) -> BasePropertyData {
+            let mut result = BasePropertyData::default();
+            $(::paste::paste! {
+                    if let Some(value) = key_value.get(&(EAttributeType::[<$name:camel>] as i32)) {
+                        result.$name = *value;
+                    }
+                }
+            )*
+            result
         }
     };
 }

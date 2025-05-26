@@ -157,6 +157,7 @@ fn handle_logic_input(state: &mut LogicState, input: LogicInput) {
             player.init();
             player.set_session(session);
             player.respond(EnterGameResponse::default(), enter_rpc_id);
+            player.update_role_equipment_effects();
             player.notify_general_data();
 
             player

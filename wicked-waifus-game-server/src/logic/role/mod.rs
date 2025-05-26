@@ -1,15 +1,17 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, hash::Hash};
 
 use wicked_waifus_protocol::{ArrayIntInt, FormationRoleInfo, RoleInfo};
 
 use crate::config;
+use crate::logic::player::Element;
 use crate::logic::utils::growth_utils::get_role_props_by_level;
 use crate::logic::utils::load_role_info::load_key_value;
 pub use formation::RoleFormation;
 use wicked_waifus_commons::time_util;
 use wicked_waifus_data::{role_info_data, BasePropertyData};
-use wicked_waifus_protocol_internal::{RoleData, RoleStats};
-use crate::logic::player::Element;
+use wicked_waifus_protocol_internal::{PlayerInventoryWeaponData, RoleData, RoleStats};
+
+use super::{math::Weapon, utils::growth_utils::get_weapon_props};
 
 const MAIN_CHARACTER_MALE_SPECTRO_ID: i32 = 1501;
 const MAIN_CHARACTER_FEMALE_SPECTRO_ID: i32 = 1502;
@@ -41,6 +43,8 @@ pub struct Role {
     pub equip_weapon: i32,
     pub skin_id: i32,
     pub resonant_chain_group_index: i32,
+    pub base_prop: HashMap<i32, i32>,
+    pub add_prop: HashMap<i32, i32>,
     pub hp: i32,
     pub energy: i32,
     pub special_energy_1: i32,
@@ -59,7 +63,9 @@ impl Role {
     #[inline(always)]
     pub fn get_all_roles_except_mc() -> Vec<i32> {
         role_info_data::iter()
-            .filter(|role| (role.role_type == 1 && !MAIN_CHARACTER_ARRAY.contains(&role.id)) || role.id == 5101)
+            .filter(|role| {
+                (role.role_type == 1 && !MAIN_CHARACTER_ARRAY.contains(&role.id)) || role.id == 5101
+            })
             .map(|role| role.id)
             .collect()
     }
@@ -74,17 +80,17 @@ impl Role {
                 0 => MAIN_CHARACTER_MALE_AERO_ID,
                 1 => MAIN_CHARACTER_FEMALE_AERO_ID,
                 _ => unreachable!(),
-            }
+            },
             Element::Spectro => match sex {
                 0 => MAIN_CHARACTER_FEMALE_SPECTRO_ID,
                 1 => MAIN_CHARACTER_MALE_SPECTRO_ID,
                 _ => unreachable!(),
-            }
+            },
             Element::Havoc => match sex {
                 0 => MAIN_CHARACTER_MALE_HAVOC_ID,
                 1 => MAIN_CHARACTER_FEMALE_HAVOC_ID,
                 _ => unreachable!(),
-            }
+            },
         }
     }
 
@@ -97,21 +103,21 @@ impl Role {
         let mut variations: Vec<i32> = Vec::new();
         for element in unlocked_elements {
             match element {
-                Element::Glacio => {},
-                Element::Fusion => {},
-                Element::Electro => {},
+                Element::Glacio => {}
+                Element::Fusion => {}
+                Element::Electro => {}
                 Element::Aero => {
                     variations.push(MAIN_CHARACTER_MALE_AERO_ID);
                     variations.push(MAIN_CHARACTER_FEMALE_AERO_ID);
-                },
+                }
                 Element::Spectro => {
                     variations.push(MAIN_CHARACTER_MALE_SPECTRO_ID);
                     variations.push(MAIN_CHARACTER_FEMALE_SPECTRO_ID);
-                },
+                }
                 Element::Havoc => {
                     variations.push(MAIN_CHARACTER_MALE_HAVOC_ID);
                     variations.push(MAIN_CHARACTER_FEMALE_HAVOC_ID);
-                },
+                }
             }
         }
         variations
@@ -155,6 +161,13 @@ impl Role {
         };
         // TODO: add weapon and echo stats
         let base_stats = &get_role_props_by_level(role_id, level, breakthrough);
+        let base_prop = load_key_value(base_stats);
+        let add_prop: HashMap<i32, i32> = HashMap::from([
+            (2, 0),  // HP
+            (7, 0),  // ATK
+            (10, 0), // DEF
+        ]);
+
         Self {
             role_id,
             name: String::with_capacity(0),
@@ -168,6 +181,8 @@ impl Role {
             equip_weapon: data.init_weapon_item_id,
             skin_id: data.skin_id,
             resonant_chain_group_index,
+            base_prop,
+            add_prop,
             hp: base_stats.life,
             energy: base_stats.energy,
             special_energy_1: base_stats.special_energy_1,
@@ -198,9 +213,14 @@ impl Role {
         base_stats
     }
 
+    pub fn compute_role_equipment_effects(&mut self, weapon: &PlayerInventoryWeaponData) {
+        // Apply Weapon Atributes
+        Weapon::assign_weapon_attributes(&mut self.base_prop, &mut self.add_prop, weapon);
+
+        // TODO: Apply Echoes Atributes
+    }
+
     pub fn to_protobuf(&self) -> RoleInfo {
-        // TODO: add weapon and echo stats
-        let base_prop: HashMap<i32, i32> = load_key_value(&self.get_base_properties());
         RoleInfo {
             role_id: self.role_id,
             name: self.name.clone(),
@@ -213,7 +233,13 @@ impl Role {
                 .iter()
                 .map(|(k, v)| ArrayIntInt { key: *k, value: *v })
                 .collect(),
-            base_prop: base_prop
+            base_prop: self
+                .base_prop
+                .iter()
+                .map(|(&k, &v)| ArrayIntInt { key: k, value: v })
+                .collect(),
+            add_prop: self
+                .add_prop
                 .iter()
                 .map(|(&k, &v)| ArrayIntInt { key: k, value: v })
                 .collect(),
@@ -250,6 +276,16 @@ impl Role {
                 equip_weapon: data.equip_weapon,
                 skin_id: data.skin_id,
                 resonant_chain_group_index: data.resonant_chain_group_index,
+                base_prop: if data.base_prop.is_empty() {
+                    load_key_value(&get_role_props_by_level(
+                        data.role_id,
+                        data.level,
+                        data.breakthrough,
+                    ))
+                } else {
+                    data.base_prop
+                },
+                add_prop: data.add_prop,
                 hp: data.stats.unwrap().hp,
                 energy: data.stats.unwrap().energy,
                 special_energy_1: data.stats.unwrap().special_energy_1,
@@ -282,6 +318,8 @@ impl Role {
             // models: vec![],
             // skill_node_state: vec![],
             resonant_chain_group_index: self.resonant_chain_group_index,
+            base_prop: HashMap::new(), // Naruse suggest me to don't save baseprop and addprop to db
+            add_prop: HashMap::new(),
             equip_weapon: self.equip_weapon,
             skin_id: self.skin_id,
             stats: Some(RoleStats {

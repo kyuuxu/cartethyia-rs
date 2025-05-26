@@ -167,7 +167,7 @@ impl PlayerInventory {
         exp: i32,
         breach: i32,
         reson: i32,
-        role: i32,
+        role: Option<i32>,
     ) -> Result<i32, InventoryError> {
         let inc_id = self.weapons_seq.take_id();
         self.weapons.insert(
@@ -179,7 +179,7 @@ impl PlayerInventory {
                 exp,
                 breach,
                 reson_level: reson,
-                role_id: role,
+                role_id: role.unwrap_or(0),
             },
         );
         Ok(inc_id)
@@ -211,6 +211,62 @@ impl PlayerInventory {
             .get(&inc_id)
             .map(|weapon_data| (weapon_data.id, weapon_data.breach))
     }
+
+    pub fn get_weapon_equip_by_role(
+        &self,
+        role_id: i32,
+    ) -> Option<(&i32, &PlayerInventoryWeaponData)> {
+        self.weapons
+            .iter()
+            .find(|(_, weapon)| weapon.role_id == role_id)
+    }
+
+    pub fn swap_weapon(
+        &mut self,
+        incr_id: i32,
+        role_id: i32,
+    ) -> Result<HashMap<i32, (PlayerInventoryWeaponData, PlayerInventoryWeaponData)>, InventoryError> {
+        let mut result = HashMap::new();
+    
+        let prev_key = self
+            .weapons
+            .iter()
+            .find_map(|(k, w)| if w.role_id == role_id { Some(*k) } else { None })
+            .ok_or(InventoryError::ItemNotFound(incr_id))?;
+    
+        if !self.weapons.contains_key(&incr_id) {
+            return Err(InventoryError::ItemNotFound(incr_id));
+        }
+    
+        if prev_key == incr_id {
+            return Ok(HashMap::new()); 
+        }
+    
+        let before_first = self.weapons.get(&prev_key).unwrap().clone();
+        let before_second = self.weapons.get(&incr_id).unwrap().clone();
+    
+        let mut first = self.weapons.remove(&prev_key).expect("weapon not found");
+        let mut second = self.weapons.remove(&incr_id).expect("weapon not found");
+    
+        // Swap role_id
+        if second.role_id != 0 {
+            let target_owner = second.role_id;
+            second.role_id = role_id;
+            first.role_id = target_owner;
+        } else {
+            second.role_id = role_id;
+            first.role_id = 0;
+        }
+    
+        self.weapons.insert(prev_key, first.clone());
+        self.weapons.insert(incr_id, second.clone());
+    
+        result.insert(prev_key, (before_first, first));
+        result.insert(incr_id, (before_second, second));
+    
+        Ok(result)
+    }
+    
 
     #[inline(always)]
     fn add_internal(&mut self, id: i32, quantity: i32) -> i32 {

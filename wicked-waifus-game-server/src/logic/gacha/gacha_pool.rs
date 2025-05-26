@@ -118,7 +118,10 @@ impl GachaPool {
                     let weapon_id = role.equip_weapon;
                     player.role_list.insert(item_id, role);
                     // TODO notifies player update
-                    player.inventory.add_weapon(role_id, 0, 1, 0, 0, 0, weapon_id).unwrap();
+                    player
+                        .inventory
+                        .add_weapon(weapon_id, 0, 1, 1, 0, 1, Some(role_id))
+                        .unwrap();
                     // TODO notifies weapon update
                 }
             }

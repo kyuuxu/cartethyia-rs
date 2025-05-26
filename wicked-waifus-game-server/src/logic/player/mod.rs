@@ -46,6 +46,7 @@ use crate::logic::player::player_mc_element::PlayerMcElement;
 use crate::logic::player::player_month_card::PlayerMonthCard;
 use crate::logic::player::player_teleports::{PlayerTeleport, PlayerTeleports};
 use crate::logic::player::player_tutorials::{PlayerTutorial, PlayerTutorials};
+use crate::logic::player::player_unlocked_skins::PlayerUnlockedSkins;
 use crate::logic::player::Element::Spectro;
 use crate::logic::{
     components::{
@@ -56,7 +57,6 @@ use crate::logic::{
 };
 use crate::session::Session;
 use crate::{config, create_player_entity_pb};
-use crate::logic::player::player_unlocked_skins::PlayerUnlockedSkins;
 
 mod basic_info;
 mod explore_tools;
@@ -220,7 +220,7 @@ impl Player {
         }
         for role in self.role_list.values() {
             self.inventory
-                .add_weapon(role.equip_weapon, 0, 1, 0, 0, 0, role.role_id)
+                .add_weapon(role.equip_weapon, 0, 1, 0, 0, 1, Some(role.role_id))
                 .unwrap();
         }
 
@@ -435,7 +435,11 @@ impl Player {
         }
     }
 
-    pub fn build_player_entity_add_notify(&self, role_list: Vec<Role>, world: &mut WorldEntity) -> EntityAddNotify {
+    pub fn build_player_entity_add_notify(
+        &self,
+        role_list: Vec<&Role>,
+        world: &mut WorldEntity,
+    ) -> EntityAddNotify {
         create_player_entity_pb!(
             role_list,
             self.basic_info.cur_map_id,
@@ -703,6 +707,15 @@ impl Player {
 
     pub fn set_session(&mut self, session: Arc<Session>) {
         self.session = Some(session);
+    }
+
+    pub fn update_role_equipment_effects(&mut self) {
+        for role in self.role_list.values_mut() {
+            if let Some((_, weapon)) = self.inventory.get_weapon_equip_by_role(role.role_id) {
+                role.compute_role_equipment_effects(weapon);
+                // TODO: Echoes
+            }
+        }
     }
 
     pub fn build_role_list_notify(&self) -> PbGetRoleListNotify {

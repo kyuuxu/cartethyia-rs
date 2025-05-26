@@ -55,14 +55,16 @@ message RoleData {
   repeated int32 models = 12;
   repeated RoleSkillNodeData skill_node_state = 13;
   int32 resonant_chain_group_index = 14;
-  int32 equip_weapon = 15;
-  int32 skin_id = 16;
-  RoleStats stats = 17;
-  int32 favor_level = 18;
-  int32 favor_exp = 19;
-  int32 wing_skin_id = 20;
-  int32 fly_skin_id = 21;
-  int32 weapon_skin_id = 22;
+  map<int32, int32> base_prop = 15;
+  map<int32, int32> add_prop = 16;
+  int32 equip_weapon = 17;
+  int32 skin_id = 18;
+  RoleStats stats = 19;
+  int32 favor_level = 20;
+  int32 favor_exp = 21;
+  int32 wing_skin_id = 22;
+  int32 fly_skin_id = 23;
+  int32 weapon_skin_id = 24;
 }
 
 message RoleFormationData {
