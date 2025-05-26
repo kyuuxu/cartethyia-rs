@@ -1,0 +1,223 @@
+syntax = "proto3";
+package data;
+
+message VectorData {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+}
+
+message TransformData {
+  VectorData position = 1;
+  VectorData rotation = 2;
+}
+
+message PlayerBasicData {
+  int32 id = 1;
+  string name = 2;
+  int32 sex = 3;
+  int32 level = 4;
+  int32 exp = 5;
+  int32 head_photo = 6;
+  int32 head_frame = 7;
+  int32 cur_map_id = 8;
+  repeated int32 role_show_list = 9;
+}
+
+message RoleSkillNodeData {
+  int32 node_id = 1;
+  bool is_active = 2;
+  int32 skill_id = 3;
+}
+
+message RoleStats {
+  int32 hp = 1; // Current HP
+  int32 energy = 2; // Ultimate energy
+  int32 special_energy_1 = 3; // Forte
+  int32 special_energy_2 = 4; // Forte
+  int32 special_energy_3 = 5; // Forte
+  int32 special_energy_4 = 6; // Forte
+  int32 element_energy = 7; // Concerto
+}
+
+message RoleData {
+  int32 role_id = 1;
+  string name = 2;
+  int32 level = 3;
+  int32 exp = 4;
+  int32 breakthrough = 5;
+  map<int32, int32> skill_map = 6;
+  map<int32, int32> phantom_map = 7;
+  int32 star = 8;
+  int32 favor = 9;
+  uint32 create_time = 10;
+  int32 cur_model = 11;
+  repeated int32 models = 12;
+  repeated RoleSkillNodeData skill_node_state = 13;
+  int32 resonant_chain_group_index = 14;
+  int32 equip_weapon = 15;
+  int32 skin_id = 16;
+  RoleStats stats = 17;
+  int32 favor_level = 18;
+  int32 favor_exp = 19;
+  int32 wing_skin_id = 20;
+  int32 fly_skin_id = 21;
+  int32 weapon_skin_id = 22;
+}
+
+message RoleFormationData {
+  int32 formation_id = 1;
+  int32 cur_role = 2;
+  repeated int32 role_id_list = 3;
+  bool is_current = 4;
+}
+
+message PlayerRoleData {
+  repeated RoleData role_list = 1;
+  map<int32, RoleFormationData> role_formation_list = 2;
+  int32 cur_formation_id = 3;
+}
+
+message PlayerLocationData {
+  int32 instance_id = 1;
+  TransformData position = 2;
+}
+
+message PlayerFuncData {
+  map<int32, int32> func_map = 1;
+}
+
+message PlayerExploreToolsData {
+  repeated int32 unlocked_skill_list = 1;
+  int32 active_skill_id = 2;
+  repeated int32 roulette = 3;
+}
+
+message PlayerChatHistoryData {
+  int32 sender = 1;
+  int32 receiver = 2;
+  int32 content_type = 3;
+  string msg_id = 4;
+  string original_message = 5;
+  string filtered_message = 6;
+  bool offline_message = 7;
+  int64 utc_time = 8;
+  string psn_account_id = 9;
+}
+
+message PlayerChatRoomData {
+  repeated PlayerChatHistoryData history = 1;
+}
+
+message PlayerChatData {
+  map<int32, PlayerChatRoomData> rooms = 1;
+}
+
+message PlayerGuidesData {
+  repeated int32 started_guides = 1;
+  repeated int32 finished_guides = 2;
+}
+
+message PlayerAdviceData {
+  bool is_show = 1;
+}
+
+message PlayerAdventureTaskStatusData {
+  int32 id = 1;
+  int32 state = 2;
+  int32 progress = 3;
+}
+
+message PlayerAdventureGlobalStatusData {
+  repeated PlayerAdventureTaskStatusData status = 1;
+  int32 now_chapter = 2;
+  int32 received_chapter = 3;
+}
+
+message PlayerAdventureStatusData {
+  repeated PlayerAdventureGlobalStatusData status = 1;
+}
+
+message PlayerInventoryWeaponData {
+  int32 id = 1;
+  int32 func_value = 2;
+  int32 level = 3;
+  int32 exp = 4;
+  int32 breach = 5;
+  int32 reson_level = 6;
+  int32 role_id = 7;
+}
+
+message PlayerInventoryData {
+  map<int32, int32> items = 1;
+  map<int32, PlayerInventoryWeaponData> weapons = 2;
+}
+
+message PlayerTeleportData {
+  int32 id = 1;
+  int32 map_id = 2;
+  int64 entity_config_id = 3;
+}
+
+message PlayerTeleportsData {
+  repeated PlayerTeleportData teleport_data = 1;
+}
+
+message PlayerTutorialData {
+  int32 id = 1;
+  uint32 create_time = 2;
+  bool get_award = 3;
+}
+
+message PlayerTutorialsData {
+  repeated PlayerTutorialData tutorials = 1;
+}
+
+message PlayerMapTraceData {
+  repeated int32 traces = 1;
+}
+
+message PlayerMonthCardData {
+  int32 days = 1;
+  int32 last_received_day = 2;
+}
+
+enum PlayerMcElementType {
+  Glacio = 0;
+  Fusion = 1;
+  Electro = 2;
+  Aero = 3;
+  Spectro = 4;
+  Havoc = 5;
+}
+
+message PlayerMcElementData {
+  repeated PlayerMcElementType unlocked_elements = 1;
+  PlayerMcElementType current_element = 2;
+}
+
+message PlayerUnlockedSkinsData {
+  repeated int32 role_skins = 1;
+  repeated int32 weapon_skins = 2;
+  repeated int32 fly_skins = 3;
+  repeated int32 wing_skins = 4;
+}
+
+message PlayerSaveData {
+  PlayerBasicData basic_data = 1;
+  PlayerRoleData role_data = 2;
+  PlayerLocationData location_data = 3;
+  PlayerFuncData func_data = 4;
+  PlayerExploreToolsData explore_tools_data = 5;
+  PlayerChatData chat_data = 6;
+  PlayerGuidesData guides = 7;
+  PlayerAdviceData advise = 8;
+  PlayerAdventureStatusData adventure_status = 9;
+  PlayerInventoryData inventory = 10;
+  PlayerTeleportsData teleports = 11;
+  PlayerTutorialsData tutorials = 12;
+  PlayerMapTraceData map_trace = 13;
+  PlayerMonthCardData month_card = 14;
+  PlayerMcElementData mc_element = 15;
+  PlayerUnlockedSkinsData unlocked_skins = 16;
+}

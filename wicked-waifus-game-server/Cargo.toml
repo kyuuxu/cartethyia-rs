@@ -1,0 +1,38 @@
+[package]
+name = "wicked-waifus-game-server"
+edition = "2021"
+version.workspace = true
+
+[dependencies]
+# Framework
+tokio.workspace = true
+
+# Serialization
+serde.workspace = true
+
+# Util
+indexmap = "2.7.1"
+uuid = { version = "1.11.0", features = ["v4"] }
+rand = "0.9.0-alpha.2"
+unreal-niggery-rs = { git = "https://git.xeondev.com/ReversedRoomsMisc/unreal-niggery-rs.git" }
+widestring = "1.1.0"
+# Used for debug
+#serde_json = "1.0.135"
+
+anyhow.workspace = true
+thiserror.workspace = true
+paste.workspace = true
+dashmap.workspace = true
+hex.workspace = true
+
+# Tracing
+tracing.workspace = true
+
+# Internal
+wicked-waifus-asset-updater.workspace = true
+wicked-waifus-commons.workspace = true
+wicked-waifus-data.workspace = true
+wicked-waifus-database.workspace = true
+wicked-waifus-network.workspace = true
+wicked-waifus-protocol-internal.workspace = true
+wicked-waifus-protocol.workspace = true

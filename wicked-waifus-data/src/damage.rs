@@ -1,0 +1,43 @@
+use serde::Deserialize;
+
+#[derive(Deserialize)]
+#[cfg_attr(feature = "strict_json_fields", serde(deny_unknown_fields))]
+#[serde(rename_all = "PascalCase")]
+pub struct DamageData {
+    pub id: i64,
+    pub calculate_type: i32,
+    pub element: i32,
+    pub damage_text_type: i32,
+    pub payload_id: i32,
+    pub r#type: i32,
+    pub sub_type: Vec<i32>,
+    pub smash_type: i32,
+    pub cure_base_value: Vec<i32>,
+    pub related_property: i32,
+    pub rate_lv: Vec<i32>,
+    pub hardness_lv: Vec<i32>,
+    pub tough_lv: Vec<i32>,
+    pub energy: Vec<i32>,
+    pub special_energy1: Vec<i32>,
+    pub special_energy2: Vec<i32>,
+    pub special_energy3: Vec<i32>,
+    pub special_energy4: Vec<i32>,
+    pub element_power_type: i32,
+    pub element_power: Vec<i32>,
+    pub formula_type: i32,
+    pub formula_param1: Vec<i32>,
+    pub formula_param2: Vec<i32>,
+    pub formula_param3: Vec<i32>,
+    pub formula_param4: Vec<i32>,
+    pub formula_param5: Vec<i32>,
+    pub formula_param6: Vec<i32>,
+    pub formula_param7: Vec<i32>,
+    pub formula_param8: Vec<i32>,
+    pub formula_param9: Vec<i32>,
+    pub formula_param10: Vec<i32>,
+    pub immune_type: i32,
+    pub percent0: Vec<i32>,
+    pub percent1: Vec<i32>,
+    pub fluctuation_lower: Vec<i32>,
+    pub fluctuation_upper: Vec<i32>,
+}
