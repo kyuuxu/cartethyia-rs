@@ -1,0 +1,12 @@
+.idea
+/target
+/hotpatch.toml
+/configserver.toml
+/loginserver.toml
+/gateway.toml
+/open.ps1
+/gameserver.toml
+/wicked-waifus-protocol-internal/generated
+/wicked-waifus-protocol/generated
+/data/assets/config-server
+/data/assets/game-data

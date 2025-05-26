@@ -1,0 +1,6 @@
+FROM alpine:3.20
+ARG MICROSERVICE
+
+WORKDIR /app
+COPY --from=wicked-waifus-builder:2.1.0-SNAPSHOT /app/target/release/$MICROSERVICE ./service
+CMD ["./service"]

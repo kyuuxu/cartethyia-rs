@@ -1,0 +1,63 @@
+name: wicked-waifus-ps
+
+services:
+  wicked-waifus-config-server:
+    image: wicked-waifus-config-server:2.1.0-SNAPSHOT
+    depends_on:
+      wicked-waifus-postgres:
+        condition: service_healthy
+    ports:
+      - '10001:10001'
+    volumes:
+      - "./data/docker/configserver.toml:/app/configserver.toml"
+      - "./data/assets/config:/app/assets/config"
+  wicked-waifus-login-server:
+    image: wicked-waifus-login-server:2.1.0-SNAPSHOT
+    depends_on:
+      wicked-waifus-postgres:
+        condition: service_healthy
+    ports:
+      - '5500:5500'
+    volumes:
+      - "./data/docker/loginserver.toml:/app/loginserver.toml"
+  wicked-waifus-gateway-server:
+    image: wicked-waifus-gateway-server:2.1.0-SNAPSHOT
+    depends_on:
+      wicked-waifus-postgres:
+        condition: service_healthy
+    ports:
+      # Uncomment this if you want to have manual access
+      #      - '10003:10003'
+      - '7777:7777/udp'
+    volumes:
+      - "./data/docker/gateway.toml:/app/gateway.toml"
+  wicked-waifus-game-server:
+    image: wicked-waifus-game-server:2.1.0-SNAPSHOT
+    depends_on:
+      wicked-waifus-postgres:
+        condition: service_healthy
+    # Uncomment this if you want to have manual access
+#    ports:
+#      - '10004:10004'
+    volumes:
+      - "./data/docker/gameserver.toml:/app/gameserver.toml"
+      - "./data/assets/game-data:/app/data/assets/game-data"
+  wicked-waifus-postgres:
+    image: postgres:16.4-alpine3.20
+    user: postgres
+    # Uncomment this if you want to have manual access
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      - "POSTGRES_PASSWORD=toor"
+    volumes:
+      - "./data/docker/postgres/scripts:/docker-entrypoint-initdb.d"
+      - wicked-waifus-postgres-vol:/var/lib/postgresql/data
+volumes:
+  wicked-waifus-postgres-vol:
+    external: true

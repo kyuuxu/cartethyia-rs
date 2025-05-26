@@ -1,0 +1,12 @@
+[network]
+http_addr = "0.0.0.0:5500"
+
+[gateway]
+host = "host.docker.internal"
+port = 7777
+
+[database]
+host = "wicked-waifus-postgres:5432"
+user_name = "wicked_waifus_user"
+password = "wicked_waifus_pass"
+db_name = "wicked_waifus_db"

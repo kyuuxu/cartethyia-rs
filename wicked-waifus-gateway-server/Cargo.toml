@@ -1,0 +1,40 @@
+[package]
+name = "wicked-waifus-gateway-server"
+edition = "2021"
+version.workspace = true
+
+[features]
+# If supporting clients < 2.0 please use "--no-default-features"
+#   (additonally you could add "-F ack-cmd-conv" but it's currently a NO-OP)
+default = ["ack-cmd-conv"]
+debug-msg = []
+ack-cmd-conv = []
+ack-cmd-conv-crc-mtu = []
+
+[dependencies]
+# Framework
+tokio.workspace = true
+
+# Networking
+kcp = { git = "https://git.xeondev.com/ReversedRoomsMisc/kcp-rs.git", features = ["wuthering-waves-old", "tokio"] }
+
+# Serialization
+serde.workspace = true
+
+# Tracing
+tracing.workspace = true
+
+# Util
+anyhow.workspace = true
+thiserror.workspace = true
+paste.workspace = true
+dashmap.workspace = true
+hex.workspace = true
+
+# Internal
+wicked-waifus-commons.workspace = true
+wicked-waifus-database.workspace = true
+wicked-waifus-network.workspace = true
+wicked-waifus-protocol-internal.workspace = true
+wicked-waifus-protocol.workspace = true
+wicked-waifus-protokey.workspace = true

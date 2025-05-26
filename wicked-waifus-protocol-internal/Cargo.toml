@@ -1,0 +1,17 @@
+[package]
+name = "wicked-waifus-protocol-internal"
+edition = "2021"
+version.workspace = true
+
+[dependencies]
+byteorder.workspace = true
+crc32fast.workspace = true
+thiserror.workspace = true
+prost.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+wicked-waifus-protocol.workspace = true
+wicked-waifus-protocol-derive.workspace = true
+
+[build-dependencies]
+prost-build.workspace = true
