@@ -223,7 +223,10 @@ impl ComponentsData {
     pub fn merge_with_template(&self, template: &Self) -> Self {
         Self {
             base_info_component: self.base_info_component.as_ref().or(template.base_info_component.as_ref()).cloned(),
-            ai_component: self.ai_component.as_ref().or(template.ai_component.as_ref()).cloned(),
+            // TODO: LevelEntityConfig doesn't have an AI ID,
+            // but TemplateConfig does.
+            // So for now I'll use from TemplateConfig
+            ai_component: template.ai_component.as_ref().cloned(),
             attribute_component: self.attribute_component.as_ref().or(template.attribute_component.as_ref()).cloned(),
             teleport_component: self.teleport_component.as_ref().or(template.teleport_component.as_ref()).cloned(),
             monster_component: self.monster_component.as_ref().or(template.monster_component.as_ref()).cloned(),

@@ -438,7 +438,6 @@ pub struct StateMachineTransition {
 #[serde(rename_all = "PascalCase")]
 pub struct StateMachineNodeCommon {
     pub uuid: i32,
-    #[cfg(feature = "strict_json_fields")]
     pub is_anim_state_machine: Option<bool>,
     #[cfg(feature = "strict_json_fields")]
     pub is_conduit_node: Option<bool>,

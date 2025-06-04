@@ -1,5 +1,7 @@
 use wicked_waifus_protocol::combat_message::{
-    combat_notify_data, combat_receive_data, combat_request_data, combat_response_data, combat_send_data, CombatNotifyData, CombatReceiveData, CombatReceivePackNotify, CombatRequestData, CombatResponseData, CombatSendPackRequest, CombatSendPackResponse
+    combat_notify_data, combat_receive_data, combat_request_data, combat_response_data,
+    combat_send_data, CombatNotifyData, CombatReceiveData, CombatReceivePackNotify,
+    CombatRequestData, CombatResponseData, CombatSendPackRequest, CombatSendPackResponse,
 };
 use wicked_waifus_protocol::{
     AttributeChangedNotify, CombatCommon, DErrorResult, DamageExecuteRequest,
@@ -10,10 +12,12 @@ use wicked_waifus_protocol::{
 
 use wicked_waifus_data::damage_data;
 
+use crate::logic::components::Attribute;
 use crate::logic::ecs::component::ComponentContainer;
+use crate::logic::math::Damage;
 use crate::logic::player::Player;
 use crate::logic::utils::world_util;
-use crate::query_components;
+use crate::{modify_component, query_components};
 
 #[inline(always)]
 fn create_combat_response(
@@ -182,6 +186,45 @@ fn handle_damage_execute_request(
             };
         }
     }
+
+    if let Some(role) = player.role_list.get_mut(&config_id) {
+        // Concerto and Energy recovery
+        let attributes = Damage::attribute_recovery(request.damage_id, &mut role.base_prop);
+
+        for (key, value) in attributes {
+            let e_attr_type = EAttributeType::try_from(key).unwrap();
+            modify_component!(
+                world.get_entity_components(request.attacker_entity_id as i32),
+                Attribute,
+                |attribute: &mut Attribute| {
+                    if let Some(attr) = attribute.attr_map.get_mut(&e_attr_type) {
+                        attr.0 = value;
+                    }
+                }
+            );
+
+            if let Some(attribute) =
+                query_components!(world, request.attacker_entity_id, Attribute).0
+            {
+                let attributes = attribute
+                    .attr_map
+                    .get(&e_attr_type)
+                    .map(|(base, incr)| GameplayAttributeData {
+                        attribute_type: e_attr_type.into(),
+                        current_value: *base,
+                        value_increment: *base + *incr,
+                    })
+                    .unwrap_or_default();
+
+                attribute_changed_combat_notify(
+                    player,
+                    request.attacker_entity_id,
+                    vec![attributes],
+                );
+            }
+        }
+    }
+
     receive_pack.data.push(create_combat_response(
         combat_request,
         combat_response_data::Message::DamageExecuteResponse(DamageExecuteResponse {
